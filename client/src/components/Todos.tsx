@@ -73,6 +73,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         todos: this.state.todos.filter(todo => todo.todoId !== todoId)
       })
     } catch {
+      console.log("this.state.todos",this.state.todos)
       alert('Todo deletion failed')
     }
   }
