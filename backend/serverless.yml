@@ -103,7 +103,7 @@ functions:
           authorizer: Auth
           request:
             schemas:
-              application/json: ${file(models/create-todo-model.json)}
+              application/json: ${file(models/update-todo-model.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -145,8 +145,8 @@ functions:
         Resource: !GetAtt AttachmentsBucket.Arn
       - Effect: Allow
         Action:
-          - dynamodb:GetItem
-          - dynamodb:PutItem
+          # - dynamodb:GetItem
+          # - dynamodb:PutItem
           - dynamodb:UpdateItem
         Resource: !GetAtt TodosTable.Arn
 
