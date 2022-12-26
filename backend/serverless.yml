@@ -1,6 +1,6 @@
 org: oanhnguyen190299
-app: serverless-todo-app
-service: serverless-todo-app-service
+app: serverless-book-app
+service: serverless-book-app-service
 
 plugins:
   - serverless-webpack
@@ -22,9 +22,9 @@ provider:
   # Use these variables in the functions and resouorces section below. For example, 
   # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
   environment:
-    TODOS_TABLE: Todos-oanhntk23-${self:provider.stage}
-    TODOS_CREATED_AT_INDEX: CreatedAtIndex-oanhntk23
-    ATTACHMENT_S3_BUCKET: serverless-oanhntk23-todo-images-${self:provider.stage}
+    BOOKS_TABLE: Books-oanhntk23-${self:provider.stage}
+    BOOKS_CREATED_AT_INDEX: CreatedAtIndex-oanhntk23
+    ATTACHMENT_S3_BUCKET: serverless-oanhntk23-book-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
 
   logs:
@@ -45,8 +45,8 @@ provider:
       api:
         info:
           version: v1.0.0
-          title: Todos API
-          description: Todos API for serverless-todo-app
+          title: Books API
+          description: Books API for serverless-book-app
 
 functions:
 
@@ -54,70 +54,62 @@ functions:
     handler: src/lambda/auth/auth0Authorizer.handler
 
   # Provide iamRoleStatements property for performing Actions on DynamoDB
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+  GetBooks:
+    handler: src/lambda/http/getBooks.handler
     events:
       - http:
           method: get
-          path: todos
+          path: books
           cors: true
           authorizer: Auth
     iamRoleStatements:
-      # - Effect: Allow
-      #   Action:
-      #     - dynamodb:Query
-      #   Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
-
-  # Provide iamRoleStatements property. Decide the Actions and AWS Resource. 
-  # To refer to an AWS resource defined in the "Resources" section, you can use "Resource: !GetAtt <resource-name>.Arn"
-  # To validate incoming HTTP requests, we have provided the request schemas in function definition below. 
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.BOOKS_TABLE}/index/${self:provider.environment.BOOKS_CREATED_AT_INDEX}
+  CreateBook:
+    handler: src/lambda/http/createBook.handler
     events:
       - http:
           method: post
-          path: todos
+          path: books
           cors: true
           authorizer: Auth
           request:
             schemas:
-              application/json: ${file(models/create-todo-model.json)}
+              application/json: ${file(models/create-book-model.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: !GetAtt TodosTable.Arn
+        Resource: !GetAtt BooksTable.Arn
 
   # Provide property for setting up CORS, Authorizer, iamRoleStatements, and request schemas
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateBook:
+    handler: src/lambda/http/updateBook.handler
     events:
       - http:
           method: patch
-          path: todos/{todoId}
+          path: books/{bookId}
           cors: true
           authorizer: Auth
           request:
             schemas:
-              application/json: ${file(models/update-todo-model.json)}
+              application/json: ${file(models/update-book-model.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
-        Resource: !GetAtt TodosTable.Arn
+        Resource: !GetAtt BooksTable.Arn
 
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteBook:
+    handler: src/lambda/http/deleteBook.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: books/{bookId}
           cors: true
           authorizer: Auth
     iamRoleStatements:
@@ -125,7 +117,7 @@ functions:
         Action:
           - dynamodb:GetItem
           - dynamodb:DeleteItem
-        Resource: !GetAtt TodosTable.Arn
+        Resource: !GetAtt BooksTable.Arn
 
   # TODO: Configure this function
   # Provide property for setting up CORS, Authorizer, iamRoleStatements
@@ -134,7 +126,7 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: books/{bookId}/attachment
           cors: true
           authorizer: Auth
     iamRoleStatements:
@@ -148,7 +140,7 @@ functions:
           # - dynamodb:GetItem
           # - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resource: !GetAtt TodosTable.Arn
+        Resource: !GetAtt BooksTable.Arn
 
 resources:
   Resources:
@@ -167,25 +159,25 @@ resources:
           Ref: ApiGatewayRestApi
 
     # TODO: Create a DynamoDB table with local secondary index and a composite key
-    TodosTable:
+    BooksTable:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: todoId
+          - AttributeName: bookId
             AttributeType: S
           - AttributeName: createdAt
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: todoId
+          - AttributeName: bookId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
+        TableName: ${self:provider.environment.BOOKS_TABLE}
         LocalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
+          - IndexName: ${self:provider.environment.BOOKS_CREATED_AT_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
@@ -214,14 +206,11 @@ resources:
               AllowedHeaders:
                 - '*'
               MaxAge: 3600
-
-    # TODO: Complete the policy below and attach it to the bucket defined above
-    # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
         PolicyDocument:
-          Id: Project4S3Bucket
+          Id: Project5S3Bucket
           Version: "2012-10-17"
           Statement:
             - Sid: Stmt127330165216

@@ -4,13 +4,13 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
-import { createAttachmentPresignedUrl } from '../../businessLogic/todos'
+import { createAttachmentPresignedUrl } from '../../businessLogic/books'
 import { getUserId } from '../utils'
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const todoId = event.pathParameters.todoId
-    const uploadedUrl = await createAttachmentPresignedUrl(getUserId(event), todoId)
+    const bookId = event.pathParameters.bookId
+    const uploadedUrl = await createAttachmentPresignedUrl(getUserId(event), bookId)
 
     return {
       statusCode: 201,
