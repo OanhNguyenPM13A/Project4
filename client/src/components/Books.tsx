@@ -131,8 +131,19 @@ export class Books extends React.PureComponent<BooksProps, BooksState> {
         quantity: this.state.newBookQuantity,
         price: this.state.newBookPrice
       });
+      const books = [...this.state.books];
+      let edit_book = books.find(book => book.bookId === this.state.bookId);
+
+      edit_book!.name = this.state.newBookName;
+
+      edit_book!.author = this.state.newBookAuthor;
+
+      edit_book!.quantity = this.state.newBookQuantity;
+
+      edit_book!.price = this.state.newBookPrice;
+
       this.setState({
-        books: this.state.books,
+        books: books,
         newBookName: '',
         newBookAuthor: '',
         newBookQuantity: 0,
@@ -227,7 +238,7 @@ export class Books extends React.PureComponent<BooksProps, BooksState> {
                 Quantity: {book.quantity}
               </Grid.Column>
               <Grid.Column width={2} >
-                Price: {book.quantity} $
+                Price: {book.price} $
               </Grid.Column>
               <Grid.Column width={1} >
                 <Button
